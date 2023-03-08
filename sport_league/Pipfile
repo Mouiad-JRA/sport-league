@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = ">=3.2.16,<3.3"
+django-import-export = "*"
+django-extensions = "*"
+django-environ = "*"
+djangorestframework = "*"
+
+[dev-packages]
+black = "*"
+isort = "*"
+pre-commit = "*"
+
+[requires]
+python_version = "3.9"
