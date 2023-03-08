@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Ranking Table
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="mb-4">Ranking Table</h1>
+
+        {% if not standings %}
+            <div class="alert alert-warning" role="alert">
+                No data to display. Please <a href="{% url 'game:upload_game' %}">upload a game file</a>.
+            </div>
+        {% else %}
+            <div id="rank-container">
+                {% include 'ranking_table.html' %}
+            </div>
+            <hr>
+
+            <!-- Add Game Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    Add Game
+                </div>
+                <div class="card-body">
+                    <form id="add-form" method="post" action="{% url 'game:game-list' %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="home-team">Home Team:</label>
+                            <input type="text" id="home-team" name="home_team" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="home-score">Score:</label>
+                            <input type="number" id="home-score" name="home_team_score" class="form-control" min="0"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label for="away-team">Away Team:</label>
+                            <input type="text" id="away-team" name="away_team" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="away-score">Score:</label>
+                            <input type="number" id="away-score" name="away_team_score" class="form-control" min="0"
+                                   required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Game</button>
+                        <div class="alert alert-danger" hidden></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Edit Game Form -->
+            <div class="card mb-4">
+            <div class="card-header">
+                Edit Game
+            </div>
+            <div class="card-body">
+            <form id="edit-form" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="game">Game:</label>
+                    <select id="game-edit-id" name="game" class="form-control" required>
+                        <option value="" selected disabled>Select a game</option>
+                        {% for game in games %}
+                            <option value="{{ game.id }}">{{ game.home_team.name }}
+                                vs {{ game.away_team.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="home-score">Home Score:</label>
+                    <input type="number" id="home-score-edit" name="home_team_score" class="form-control" min="0"
+                           required>
+                </div>
+                <div class="form-group">
+                    <label for="away-score">Away Score:</label>
+                    <input type="number" id="away-score-edit" name="away_team_score" class="form-control" min="0">
+                </div>
+                <button type="submit" class="btn btn-primary">Edit Game</button>
+                <div class="alert alert-danger" hidden></div>
+            </form>
+
+            <hr>
+
+            <!-- Delete Game Form -->
+            <form id="delete-form" class="form-inline" method="post">
+                {% csrf_token %}
+                <div class="form-group mr-2">
+                    <label for="game" class="mr-2">Game:</label>
+                    <select id="game-id" name="game" class="form-control">
+                        {% for game in games %}
+                            <option value="{{ game.id }}" data-home="{{ game.home_team.id }}"
+                                    data-away="{{ game.away_team.id }}">{{ game.home_team.name }}
+                                vs {{ game.away_team.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-danger">Delete Game</button>
+            </form>
+            <hr>
+        {% endif %}
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                $("#add-form").submit(function (event) {
+                    event.preventDefault();
+                    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    let payload = {
+                        home_team: {name: $("#home-team").val()},
+                        away_team: {name: $("#away-team").val()},
+                        home_team_score: $("#home-score").val(),
+                        away_team_score: $("#away-score").val(),
+                    }
+
+                    $.ajax({
+                        type: "POST",
+                        url: "{% url 'game:game-list' %}",
+                        data: JSON.stringify(payload),
+                        contentType: "application/json",
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'Content-type': 'application/json; charset=UTF-8',
+                        },
+                        success: function (response) {
+                            $.get("{% url 'game:ranking_table' %}", (res) => $("#rank-container").html(res));
+                            $("#add-form").trigger("reset");
+                            $("#add-form .alert-danger").attr("hidden", true);
+                        },
+                        error: function (xhr, status, error) {
+                            let errors = xhr.responseJSON;
+                            let errorsList = "<ul>";
+                            for (let field in errors) {
+                                for (let i = 0; i < errors[field].length; i++) {
+                                    errorsList += `<li>${field}: ${errors[field][i]}</li>`;
+                                }
+                            }
+                            errorsList += "</ul>";
+                            $("#add-form .alert-danger").html(errorsList).attr("hidden", false);
+                        },
+                    });
+                });
+
+                $("#edit-form").submit(function (event) {
+                    event.preventDefault();
+                    let gameId = $("#game-edit-id").val();
+                    let homeScore = $("#home-score-edit").val();
+                    let awayScore = $("#away-score-edit").val();
+                    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                    $.ajax({
+                        type: "PUT",
+                        url: "{% url 'game:game-detail' 0 %}".replace("0", gameId),
+                        data: JSON.stringify({
+                            home_team_score: homeScore,
+                            away_team_score: awayScore,
+                        }),
+                        contentType: "application/json",
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'Content-type': 'application/json; charset=UTF-8',
+                        },
+                        success: function (response) {
+                            $.get("{% url 'game:ranking_table' %}", function (data) {
+                                let games = JSON.parse(data);
+                                let options = '';
+                                games.forEach(function (game) {
+                                    options += `<option value="${game.id}">${game.home_team.name} vs ${game.away_team.name}</option>`;
+                                });
+                                $('#game-edit-id').html(options);
+                            });
+
+                            $.get("{% url 'game:ranking_table' %}", (res) => $("#rank-container").html(res));
+                            $("#edit-form").trigger("reset");
+                            $("#edit-form .alert-danger").attr("hidden", true);
+                        },
+                        error: function (xhr, status, error) {
+                            let errors = xhr.responseJSON;
+                            let errorsList = "<ul>";
+                            for (let field in errors) {
+                                for (let i = 0; i < errors[field].length; i++) {
+                                    errorsList += `<li>${field}: ${errors[field][i]}</li>`;
+                                }
+                            }
+                            errorsList += "</ul>";
+                            $("#edit-form .alert-danger").html(errorsList).attr("hidden", false);
+                        },
+                    });
+                });
+
+                $('#delete-form').submit(function (event) {
+                    event.preventDefault();
+                    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    let gameId = $('#game-id').val();
+                    $.ajax({
+                        url: "{% url 'game:game-detail' 0 %}".replace("0", gameId),
+                        method: 'DELETE',
+                        contentType: "application/json",
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'Content-type': 'application/json; charset=UTF-8',
+                        },
+                        success: function (response) {
+                            $('#game-id option[value="' + gameId + '"]').remove();
+                            $.get("{% url 'game:ranking_table' %}", function (res) {
+                                $("#rank-container").html(res);
+                            });
+                            $.get("{% url 'game:game-list' %}", function (res) {
+                                let games = JSON.parse(res);
+                                let options = '';
+                                for (let i = 0; i < games.length; i++) {
+                                    options += '<option value="' + games[i]['id'] + '" data-home="' +
+                                        games[i]['home_team']['id'] + '" data-away="' + games[i]['away_team']['id'] +
+                                        '">' + games[i]['home_team']['name'] + ' vs ' + games[i]['away_team']['name'] + '</option>';
+                                }
+                                $('#game-id').html(options);
+                                console.log(options);
+                                $('#game-edit-id').html(options);
+                            });
+                        },
+                        error: function (xhr, status, error) {
+                            console.error(error);
+                        }
+                    });
+                });
+            });
+
+        </script>
+        </div>
+{% endblock %}
