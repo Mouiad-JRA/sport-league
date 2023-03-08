@@ -18,3 +18,12 @@ class BasicRankingStrategy(RankingStrategy):
         if game.is_winner(team):
             return 3
         return 0
+
+
+class AlternateRankingStrategy(RankingStrategy):
+    def calculate_points(self, game, team):
+        if game.is_draw():
+            return 1
+        if game.is_winner(team):
+            return 2
+        return 0
