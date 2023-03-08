@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Upload Games</h1>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="csv_file">CSV File</label>
+      <input type="file" class="form-control-file" id="csv_file" name="csv_file">
+    </div>
+    <button type="submit" class="btn btn-primary">Upload</button>
+  </form>
+
+{% endblock %}
