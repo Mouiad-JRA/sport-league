@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block content %}
+    {% if request.user.is_authenticated %}
     <div class="container">
         <h1 class="mb-4">Ranking Table</h1>
 
@@ -100,6 +101,10 @@
             </form>
             <hr>
         {% endif %}
+    {% else %}
+        <p>You must be logged in to upload games.</p>
+    <a href="{% url 'game:login' %}">Log in</a>
+    {% endif %}
 
         <script>
             document.addEventListener('DOMContentLoaded', () => {
