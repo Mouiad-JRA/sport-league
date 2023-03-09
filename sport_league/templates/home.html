@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-Hi there
+        {% if request.user.is_authenticated %}
+Hi there {{ request.user.email }}
+        {% else %}
+        <p>You must be logged in to upload games.</p>
+    <a href="{% url 'game:login' %}">Log in</a>
+    {% endif %}
 {% endblock %}

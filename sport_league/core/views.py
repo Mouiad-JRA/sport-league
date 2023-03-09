@@ -1,23 +1,88 @@
 import tablib
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import AuthenticationForm
+from django.urls import reverse_lazy
+from django.views.generic import FormView, RedirectView
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .forms import CustomUserCreationForm
 from .models import Team, Game
 from .resources import GameResource
 from .serializers import GameSerializer
 from .strategies import AlternateRankingStrategy, BasicRankingStrategy
 
 
+class RegisterView(FormView):
+    template_name = "registration/register.html"
+    form_class = CustomUserCreationForm
+    success_url = reverse_lazy("game:home")
+
+    def form_invalid(self, form):
+        error_messages = []
+        for field, errors in form.errors.items():
+            for error in errors:
+                error_messages.append(error)
+        context = {
+            "form": form,
+            "errors": error_messages,
+        }
+        return render(self.request, self.template_name, context)
+
+    def form_valid(self, form):
+        form.save()
+        email = form.cleaned_data.get("email")
+        password = form.cleaned_data.get("password1")
+        user = authenticate(email=email, password=password)
+        login(self.request, user)
+        return super().form_valid(form)
+
+
+class LoginView(FormView):
+    template_name = "registration/login.html"
+    form_class = AuthenticationForm
+    success_url = reverse_lazy("game:home")
+
+    def form_invalid(self, form):
+        error_messages = []
+        for field, errors in form.errors.items():
+            for error in errors:
+                error_messages.append(error)
+        context = {
+            "form": form,
+            "errors": error_messages,
+        }
+        return render(self.request, self.template_name, context)
+    def form_valid(self, form):
+        email = form.cleaned_data.get("username")
+        password = form.cleaned_data.get("password")
+        user = authenticate(email=email, password=password)
+        if user is not None:
+            login(self.request, user)
+        return super().form_valid(form)
+
+
+class LogoutView(RedirectView):
+    url = reverse_lazy("game:login")
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return super().get(request, *args, **kwargs)
+
+
 def home(request):
     return render(request, "home.html")
 
 
+@login_required
 @csrf_exempt
 def upload_game(request):
     if request.method == "POST" and request.FILES.get("csv_file"):
@@ -43,6 +108,7 @@ def upload_game(request):
     return render(request, "upload_game.html")
 
 
+@login_required
 def ranking(request):
     strategy = BasicRankingStrategy()
     if 'ranking_strategy' in request.POST:
