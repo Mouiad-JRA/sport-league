@@ -1,7 +1,15 @@
 from django.urls import path
 
-from .views import GameListCreateAPIView, GameRetrieveUpdateDestroyAPIView, upload_game, ranking, \
-    RegisterView, LoginView, home, LogoutView
+from .views import (
+    GameListCreateAPIView,
+    GameRetrieveUpdateDestroyAPIView,
+    LoginView,
+    LogoutView,
+    RegisterView,
+    home,
+    ranking,
+    upload_game,
+)
 
 app_name = "game"
 urlpatterns = [
@@ -11,6 +19,10 @@ urlpatterns = [
     path("accounts/logout", LogoutView.as_view(), name="logout"),
     path("upload-game", upload_game, name="upload_game"),
     path("ranking-table", ranking, name="ranking_table"),
-    path('api/games/', GameListCreateAPIView.as_view(), name='game-list'),
-    path('api/games/<int:pk>/', GameRetrieveUpdateDestroyAPIView.as_view(), name='game-detail'),
+    path("api/games/", GameListCreateAPIView.as_view(), name="game-list"),
+    path(
+        "api/games/<int:pk>/",
+        GameRetrieveUpdateDestroyAPIView.as_view(),
+        name="game-detail",
+    ),
 ]

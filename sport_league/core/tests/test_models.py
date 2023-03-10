@@ -1,16 +1,18 @@
 import pytest
+from core.models import Game, Team
 from django.test import TestCase
-
-from core.models import Team, Game
 
 
 class TestGame(TestCase):
-
     def setUp(self):
         self.team1 = Team.objects.create(name="Team 1")
         self.team2 = Team.objects.create(name="Team 2")
-        self.game = Game.objects.create(home_team=self.team1, home_team_score=2, away_team=self.team2,
-                                        away_team_score=1)
+        self.game = Game.objects.create(
+            home_team=self.team1,
+            home_team_score=2,
+            away_team=self.team2,
+            away_team_score=1,
+        )
 
     def tearDown(self):
         self.team1.delete()
@@ -45,12 +47,15 @@ class TestGame(TestCase):
 
 
 class TestTeam(TestCase):
-
     def setUp(self):
         self.team1 = Team.objects.create(name="Team 1")
         self.team2 = Team.objects.create(name="Team 2")
-        self.game = Game.objects.create(home_team=self.team1, home_team_score=2, away_team=self.team2,
-                                        away_team_score=1)
+        self.game = Game.objects.create(
+            home_team=self.team1,
+            home_team_score=2,
+            away_team=self.team2,
+            away_team_score=1,
+        )
 
     def tearDown(self):
         self.team1.delete()
@@ -66,7 +71,12 @@ class TestTeam(TestCase):
         assert self.team2.games.count() == 1
 
         # Add a new game and make sure it's counted in the team's games
-        new_game = Game.objects.create(home_team=self.team1, home_team_score=3, away_team=self.team2, away_team_score=2)
+        new_game = Game.objects.create(
+            home_team=self.team1,
+            home_team_score=3,
+            away_team=self.team2,
+            away_team_score=2,
+        )
         assert self.team1.games.count() == 2
         assert self.team2.games.count() == 2
         new_game.delete()
