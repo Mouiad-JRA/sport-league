@@ -166,15 +166,6 @@
                             'Content-type': 'application/json; charset=UTF-8',
                         },
                         success: function (response) {
-                            $.get("{% url 'game:ranking_table' %}", function (data) {
-                                let games = JSON.parse(data);
-                                let options = '';
-                                games.forEach(function (game) {
-                                    options += `<option value="${game.id}">${game.home_team.name} vs ${game.away_team.name}</option>`;
-                                });
-                                $('#game-edit-id').html(options);
-                            });
-
                             $.get("{% url 'game:ranking_table' %}", (res) => $("#rank-container").html(res));
                             $("#edit-form").trigger("reset");
                             $("#edit-form .alert-danger").attr("hidden", true);
