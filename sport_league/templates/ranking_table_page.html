@@ -60,7 +60,7 @@
             <form id="edit-form" method="post">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label for="game">Game:</label>
+                    <label for="game-edit-id">Game:</label>
                     <select id="game-edit-id" name="game" class="form-control" required>
                         <option value="" selected disabled>Select a game</option>
                         {% for game in games %}
@@ -88,11 +88,10 @@
             <form id="delete-form" class="form-inline" method="post">
                 {% csrf_token %}
                 <div class="form-group mr-2">
-                    <label for="game" class="mr-2">Game:</label>
+                    <label for="game-id" class="mr-2">Game:</label>
                     <select id="game-id" name="game" class="form-control">
                         {% for game in games %}
-                            <option value="{{ game.id }}" data-home="{{ game.home_team.id }}"
-                                    data-away="{{ game.away_team.id }}">{{ game.home_team.name }}
+                            <option value="{{ game.id }}">{{ game.home_team.name }}
                                 vs {{ game.away_team.name }}</option>
                         {% endfor %}
                     </select>
@@ -131,6 +130,14 @@
                             $.get("{% url 'game:ranking_table' %}", (res) => $("#rank-container").html(res));
                             $("#add-form").trigger("reset");
                             $("#add-form .alert-danger").attr("hidden", true);
+                            $.get("{% url 'game:game-list' %}", function (res) {
+                                let options = '';
+                                for (let i = 0; i < res.length; i++) {
+                                    options += `<option value="${res[i]['id']}">${res[i]['home_team']['name']} vs ${res[i]['away_team']['name']}</option>`;
+                                }
+                                $('#game-id').html(options);
+                                $('#game-edit-id').html(options);
+                            });
                         },
                         error: function (xhr, status, error) {
                             let errors = xhr.responseJSON;
@@ -202,15 +209,11 @@
                                 $("#rank-container").html(res);
                             });
                             $.get("{% url 'game:game-list' %}", function (res) {
-                                console.log(res);
                                 let options = '';
                                 for (let i = 0; i < res.length; i++) {
-                                    options += '<option value="' + res[i]['id'] + '" data-home="' +
-                                        res[i]['home_team']['id'] + '" data-away="' + res[i]['away_team']['id'] +
-                                        '">' + res[i]['home_team']['name'] + ' vs ' + res[i]['away_team']['name'] + '</option>';
+                                    options += `<option value="${res[i]['id']}">${res[i]['home_team']['name']} vs ${res[i]['away_team']['name']}</option>`;
                                 }
                                 $('#game-id').html(options);
-                                console.log(options);
                                 $('#game-edit-id').html(options);
                             });
                         },
