@@ -9,6 +9,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView, RedirectView
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -132,6 +133,8 @@ def ranking(request):
 
 
 class GameListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         games = Game.objects.all()
         serializer = GameSerializer(games, many=True)
@@ -146,6 +149,8 @@ class GameListCreateAPIView(APIView):
 
 
 class GameRetrieveUpdateDestroyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get_object(self, pk):
         try:
             return Game.objects.get(pk=pk)
