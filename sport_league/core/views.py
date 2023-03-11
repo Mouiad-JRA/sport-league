@@ -1,21 +1,20 @@
 import tablib
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
 from django.http import Http404
 from django.shortcuts import redirect, render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm
-from django.urls import reverse_lazy
 from django.views.generic import FormView, RedirectView
-
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .forms import CustomUserCreationForm
-from .models import Team, Game
+from .models import Game, Team
 from .resources import GameResource
 from .serializers import GameSerializer
 from .strategies import AlternateRankingStrategy, BasicRankingStrategy
@@ -61,6 +60,7 @@ class LoginView(FormView):
             "errors": error_messages,
         }
         return render(self.request, self.template_name, context)
+
     def form_valid(self, form):
         email = form.cleaned_data.get("username")
         password = form.cleaned_data.get("password")
@@ -90,7 +90,10 @@ def upload_game(request):
         resource = GameResource()
         try:
             dataset = tablib.Dataset().load(
-                csv_file.read().decode("utf-8"), format="csv", delimiter=",", headers=False
+                csv_file.read().decode("utf-8"),
+                format="csv",
+                delimiter=",",
+                headers=False,
             )
             dataset.headers = [
                 "home_team",
@@ -111,8 +114,8 @@ def upload_game(request):
 @login_required
 def ranking(request):
     strategy = BasicRankingStrategy()
-    if 'ranking_strategy' in request.POST:
-        if request.POST['ranking_strategy'] == 'alternate':
+    if "ranking_strategy" in request.POST:
+        if request.POST["ranking_strategy"] == "alternate":
             strategy = AlternateRankingStrategy()
 
     teams = Team.objects.all()
@@ -120,12 +123,18 @@ def ranking(request):
     standings = strategy.calculate_rankings(teams)
 
     if request.is_ajax():
-        return render(request, 'ranking_table.html', {'standings': standings, 'games': games})
+        return render(
+            request, "ranking_table.html", {"standings": standings, "games": games}
+        )
 
-    return render(request, 'ranking_table_page.html', {'standings': standings, 'games': games})
+    return render(
+        request, "ranking_table_page.html", {"standings": standings, "games": games}
+    )
 
 
 class GameListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         games = Game.objects.all()
         serializer = GameSerializer(games, many=True)
@@ -140,6 +149,8 @@ class GameListCreateAPIView(APIView):
 
 
 class GameRetrieveUpdateDestroyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get_object(self, pk):
         try:
             return Game.objects.get(pk=pk)

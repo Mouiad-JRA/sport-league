@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from .models import Game, Team
 
 
@@ -7,7 +8,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Team
-        fields = ['id', 'name']
+        fields = ["id", "name"]
 
 
 class GameSerializer(serializers.ModelSerializer):
@@ -16,7 +17,7 @@ class GameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ['id', 'home_team', 'home_team_score', 'away_team', 'away_team_score']
+        fields = ["id", "home_team", "home_team_score", "away_team", "away_team_score"]
 
     def validate(self, attrs):
         if not self.instance:
@@ -28,18 +29,16 @@ class GameSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-
         home_team_data = validated_data.pop("home_team")
         away_team_data = validated_data.pop("away_team")
         home_team, created = Team.objects.get_or_create(**home_team_data)
         away_team, created = Team.objects.get_or_create(**away_team_data)
-        validated_data['home_team'] = home_team
-        validated_data['away_team'] = away_team
+        validated_data["home_team"] = home_team
+        validated_data["away_team"] = away_team
         game = super(GameSerializer, self).create(validated_data)
         return game
 
     def update(self, instance, validated_data):
-
         home_team_data = validated_data.pop("home_team", {})
         away_team_data = validated_data.pop("away_team", {})
         # we won't allow to edit teams for now

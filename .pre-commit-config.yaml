@@ -31,6 +31,7 @@ repos:
       - id: isort
         name: isort except __init__.py
         exclude: (/__init__\.py$|/migrations/*)
+        args: ["--profile", "black"]
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v2.1.1
     hooks:

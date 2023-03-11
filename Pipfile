@@ -14,6 +14,9 @@ djangorestframework = "*"
 black = "*"
 isort = "*"
 pre-commit = "*"
+pytest = "*"
+pytest-django = "*"
+ipython = "*"
 
 [requires]
 python_version = "3.9"
